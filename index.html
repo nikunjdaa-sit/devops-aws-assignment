@@ -1,0 +1,45 @@
+<!-- index.html - DevOps Assignment Web App -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevOps Assignment — AWS Deployment</title>
+  <style>
+    body{font-family:Arial,sans-serif;background:#0D1117;color:#E6EDF3;
+         display:flex;align-items:center;justify-content:center;
+         min-height:100vh;margin:0;}
+    .card{background:#161B22;border:1px solid #30363D;border-radius:12px;
+          padding:40px;max-width:600px;width:90%;text-align:center;}
+    h1{color:#FF9900;font-size:2rem;margin-bottom:10px;}
+    .badge{background:#238636;color:#fff;padding:4px 14px;
+           border-radius:20px;font-size:0.85rem;display:inline-block;margin:8px 4px;}
+    .info{background:#21262D;border-radius:8px;padding:16px;
+          margin:20px 0;text-align:left;font-size:0.9rem;line-height:1.8;}
+    .green{color:#3FB950;}.orange{color:#FF9900;}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🚀 DevOps Assignment</h1>
+    <p>Deployed on AWS EC2 via GitHub Actions CI/CD Pipeline</p>
+    <div>
+      <span class="badge">✅ Live</span>
+      <span class="badge">AWS EC2</span>
+      <span class="badge">Nginx</span>
+      <span class="badge">GitHub Actions</span>
+    </div>
+    <div class="info">
+      <p><span class="green">▸ Server:</span> Amazon EC2 t2.micro (ap-south-1)</p>
+      <p><span class="green">▸ Web Server:</span> Nginx</p>
+      <p><span class="green">▸ CI/CD:</span> GitHub Actions (auto-deploy on push)</p>
+      <p><span class="green">▸ Monitoring:</span> AWS CloudWatch</p>
+      <p><span class="green">▸ Storage:</span> Amazon S3</p>
+      <p><span class="orange">▸ Version:</span> v1.0 — Initial Deploy</p>
+    </div>
+    <p style="color:#8B949E;font-size:0.8rem">
+      DevOps Technical Assignment — AWS Free Tier
+    </p>
+  </div>
+</body>
+</html>
