@@ -1,0 +1,63 @@
+|Pipeline configuration|
+
+pipeline-config
+Pipeline Configuration
+Tool
+GitHub Actions
+Trigger
+Runs automatically on every push to the main branch.
+How it works
+1. Developer pushes code to GitHub.
+2. GitHub Actions checks out the repo.
+3. Using appleboy/ssh-action , it SSHs into the EC2 instance with credentials stored as GitHub Secrets (never
+hardcoded).
+4. On the EC2 instance, it pulls the latest code, copies index.html into Nginx’s web root, and reloads Nginx.
+5. Zero manual deployment steps required after the initial setup.
+Secrets used (GitHub → Settings → Secrets and variables → Actions)
+Secret Value
+EC2_HOST EC2 public IPv4 address
+EC2_USERNAME ubuntu
+EC2_SSH_KEY Full private key contents ( .pem file)
+Secrets are used specifically so no credentials ever appear in the repo or the workflow file itself.
+Workflow file — .github/workflows/deploy.yml
+name: Deploy to EC2
+on:
+push:
+branches:
+- main
+jobs:
+deploy:
+runs-on: ubuntu-latest
+steps:
+# Step 1: Download the code
+- name: Checkout code
+uses: actions/checkout@v3
+# Step 2: Deploy to EC2 via SSH
+- name: Deploy to EC2
+uses: appleboy/ssh-action@master
+with:
+host: ${{ secrets.EC2_HOST }}
+username: ${{ secrets.EC2_USERNAME }}
+key: ${{ secrets.EC2_SSH_KEY }}
+script: |
+# Pull latest code from GitHub
+cd /tmp
+rm -rf devops-aws-assignment
+git clone https://github.com/YOUR-GITHUB-USERNAME/devops-aws-assignment.git
+Replace YOUR-GITHUB-USERNAME with your actual GitHub username before committing.
+Verification
+GitHub → Actions tab shows the workflow run.
+Green tick = successful deploy. Yellow circle = in progress. Red X = failed (click the run → “deploy” step for the
+error log).
+Confirm the change is live by refreshing http://<EC2-PUBLIC-IP>/ after the run completes.
+Common failure and fix
+SSH connection refused — usually means port 22 isn’t reachable from GitHub’s runner IP range. - Temporarily open
+port 22 to 0.0.0.0/0 in the Security Group to confirm this is the cause, run the pipeline, then restrict it back to “My IP”
+afterward. - Double-check the EC2_SSH_KEY secret contains the entire .pem file contents, including the -----
+BEGIN...----- and -----END...----- lines.
+# Copy new index.html to Nginx web folder
+sudo cp devops-aws-assignment/index.html /var/www/html/index.html
+sudo chown www-data:www-data /var/www/html/index.html
+# Reload Nginx to serve new version
+sudo systemctl reload nginx
+echo "Deployment successful"
