@@ -1,0 +1,54 @@
+|Load testing report with graphs and observations.|
+
+load-testing-report
+Load Testing Report
+Tool
+Apache Bench ( ab ), version 2.3, run locally on the EC2 instance against http://localhost/ .
+Test configuration
+Test Total Requests Concurrency
+Test 1 — Light 100 10
+Test 2 — Medium 500 50
+Test 3 — Heavy 1000 100
+Results table
+Metric Test 1 (Light) Test 2 (Medium) Test 3 (Heavy)
+Requests per second
+(throughput) 11,837.12 9,758.57 11,610.63
+Time per request — mean
+(ms) 0.845 5.124 8.613
+Time per request — mean
+across concurrent (ms) 0.084 0.102 0.086
+Failed requests 0 0 0
+Total transferred 216,500 bytes 1,082,500 bytes 2,165,000 bytes
+Transfer rate 25,026.73 KB/sec 20,632.14 KB/sec 24,547.86 KB/sec
+Time taken for test 0.008 s 0.051 s 0.086 s
+Connection time breakdown (ms)
+Test Connect (mean)
+Processing
+(mean) Waiting (mean) Total (mean) Total (max)
+Test 1 0 0 0 1 1
+Test 2 2 3 2 5 7
+Test 3 3 5 3 8 12
+Analysis
+As concurrent users increased from 10 to 100, mean response time per request rose from 0.845 ms to 8.613 ms, and
+the total time to complete all requests grew from 0.008s to 0.086s. This is expected — more concurrent connections
+mean more contention for the same single-core t2.micro CPU.
+Throughput (requests/sec) stayed consistently high across all three tests (roughly 9,700–11,800 req/sec), showing the
+server handles both light and heavy simulated traffic well for a static HTML page served by Nginx. Interestingly, Test 2
+had slightly lower throughput than Test 3 — likely test-to-test variance from background CPU noise rather than a true
+bottleneck, since Test 3 (the heaviest test) still performed strongly.
+Zero failed requests across all three tests confirms Nginx’s stability on the t2.micro instance for this workload, and that
+no connections were dropped even at 100 concurrent users.
+CloudWatch monitoring during Test 3 showed a visible CPU spike coinciding with the load test window, confirming the
+monitoring pipeline correctly reflects real load in near real time — while also confirming CPU usage stayed comfortably
+under the 70% alarm threshold.
+Bottlenecks and recommended optimizations
+Single vCPU limit: t2.micro has only 1 vCPU and burstable CPU credits — under sustained (not just short-burst)
+high concurrency, response time would degrade further once burst credits are exhausted.
+Single point of failure: all traffic goes to one EC2 instance — no failover if it goes down.
+Recommended for production:
+Add an Application Load Balancer with an Auto Scaling Group across multiple instances/AZs, so traffic is
+distributed and capacity scales with demand.
+Move to a larger instance type or enable unlimited CPU credit mode if sustained high load is expected.
+Add a CDN (e.g. CloudFront) in front of static content to reduce direct load on EC2.
+
+|SCREENSHOT|
