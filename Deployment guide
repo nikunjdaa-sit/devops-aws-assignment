@@ -1,0 +1,83 @@
+|Deployment guide|
+
+DEPLOYMENT_GUIDE
+Deployment Guide
+Overview
+This project deploys a static HTML web application on AWS EC2, behind Nginx, with automated CI/CD via GitHub Actions,
+monitoring via CloudWatch, and load testing via Apache Bench.
+Architecture
+Compute: EC2 t2.micro (Ubuntu 22.04), Nginx web server, region ap-south-1 (Mumbai)
+Storage: S3 bucket for static asset / backup storage
+Identity: IAM role devops-ec2-role attached to EC2 (least privilege — CloudWatchAgentServerPolicy +
+AmazonS3ReadOnlyAccess )
+Network security: Security Group restricting inbound to SSH (my IP only), HTTP, HTTPS
+CI/CD: GitHub Actions — auto-deploys on every push to main
+Monitoring: CloudWatch dashboard, CPU alarm, log collection
+Load testing: Apache Bench ( ab ), run locally on the EC2 instance
+See architecture.png for the full diagram.
+Prerequisites
+AWS account (Free Tier)
+GitHub account
+SSH key pair for EC2 ( .pem file)
+Step-by-step deployment
+1. GitHub repository
+1. Create a new repo, e.g. devops-aws-assignment .
+2. Add index.html (the app) to the repo root.
+3. Create the folder .github/workflows/ and add an empty deploy.yml placeholder (filled in during Step 4 below).
+2. Launch EC2 and deploy the app
+1. Launch an EC2 instance: t2.micro, Ubuntu 22.04, region ap-south-1 .
+2. Create/download a key pair ( .pem ) for SSH access.
+3. SSH into the instance:
+ssh -i "your-key.pem" ubuntu@<EC2-PUBLIC-IP>
+4. Install Nginx and Apache Bench:
+sudo apt update
+sudo apt install -y nginx apache2-utils
+5. Copy index.html into /var/www/html/index.html and reload Nginx:
+sudo systemctl reload nginx
+6. Confirm the app loads at http://<EC2-PUBLIC-IP>/ .
+3. S3 bucket
+1. Create an S3 bucket, e.g. devops-assignment-backup-yourname , in ap-south-1 .
+2. Keep Block all public access turned ON.
+3. Upload index.html as a backup copy.
+4. IAM role (least privilege)
+1. IAM → Roles → Create role → Trusted entity: AWS service → Use case: EC2.
+2. Attach policies: CloudWatchAgentServerPolicy , AmazonS3ReadOnlyAccess .
+3. Name the role devops-ec2-role .
+4. Attach it to the EC2 instance: EC2 → instance → Actions → Security → Modify IAM role.
+5. Security group hardening
+Inbound rules — exactly these three, nothing else:
+Type Protocol Port Source Purpose
+SSH TCP 22 My IP Admin access only
+HTTP TCP 80 0.0.0.0/0 Public web access
+HTTPS TCP 443 0.0.0.0/0 Secure web access
+Outbound: left as default (all traffic, 0.0.0.0/0) so the instance can reach CloudWatch/S3/package repos.
+6. CI/CD pipeline (GitHub Actions)
+1. Add 3 repo secrets under Settings → Secrets and variables → Actions:
+EC2_HOST — EC2 public IP
+EC2_USERNAME — ubuntu
+EC2_SSH_KEY — full contents of the .pem file
+2. Paste the workflow into .github/workflows/deploy.yml (see pipeline-config.md ).
+3. Push to main — GitHub Actions will SSH into EC2 and deploy automatically.
+7. Monitoring (CloudWatch)
+1. Install and start the CloudWatch agent on EC2 to collect CPU, memory, and log metrics.
+2. Build a CloudWatch dashboard showing CPU utilization, network, and status checks.
+3. Create an alarm CPU-High-Alert (CPU > 70% for 1 datapoint in 5 minutes).
+4. Configure log collection for Nginx access logs into a CloudWatch log group.
+8. Load testing
+Run Apache Bench directly on the EC2 instance against localhost (see load-testing-report.md for full results):
+ab -n 100 -c 10 http://localhost/
+ab -n 500 -c 50 http://localhost/
+ab -n 1000 -c 100 http://localhost/
+Repository structure
+devops-aws-assignment/
+├── README.md
+├── index.html
+├── architecture.png
+├── DEPLOYMENT_GUIDE.md
+├── pipeline-config.md
+├── monitoring-screenshots.md
+├── load-testing-report.md
+├── security-summary.md
+└── .github/
+└── workflows/
+└── deploy.yml
