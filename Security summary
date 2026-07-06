@@ -1,0 +1,44 @@
+|Security summary|
+
+security-summary
+Security Summary
+Network security — Security Groups
+Inbound rules restricted to exactly three, following the principle of least privilege:
+Type Protocol Port Source Purpose
+SSH TCP 22 My IP only
+Admin access
+restricted to a single
+trusted IP
+HTTP TCP 80 0.0.0.0/0 Public web access
+HTTPS TCP 443 0.0.0.0/0 Secure public web
+access
+Outbound rules left at the default (all traffic, 0.0.0.0/0) so the instance can reach package repositories, CloudWatch, and
+S3 — outbound restriction wasn’t necessary for this workload, and the risk of leaving it open is low compared to inbound
+exposure.
+Identity — IAM
+Created a dedicated IAM role, devops-ec2-role , attached directly to the EC2 instance (no long-lived access keys
+stored on the server).
+Only two policies attached:
+CloudWatchAgentServerPolicy — lets the instance publish metrics and logs.
+AmazonS3ReadOnlyAccess — lets the instance read from S3, but never write or delete.
+No IAM user credentials are embedded anywhere in code or configuration — the EC2 instance assumes the role
+automatically via its instance profile.
+Secrets management
+EC2 host, username, and SSH private key are stored as GitHub Secrets, not in the repository or workflow file.
+The .pem private key is never committed to Git and never printed in workflow logs.
+Data protection
+S3 bucket has Block all public access enabled (all four settings on) — the backup bucket cannot be reached from
+the public internet.
+Summary of least-privilege principle applied
+Area Control
+Network Only 3 inbound ports open, SSH locked to a single IP
+Identity IAM role scoped to exactly 2 policies, no wildcard permissions
+Secrets Stored in GitHub Secrets, never in code
+Storage S3 bucket fully private
+Suggested next steps for a production environment
+Enable HTTPS with a real certificate (e.g. via AWS Certificate Manager + a Load Balancer, or Let’s Encrypt with
+Certbot on the instance).
+Rotate the SSH key periodically and consider replacing direct SSH deploys with AWS Systems Manager Session
+Manager (removes the need for an open port 22 entirely).
+Enable S3 bucket versioning and server-side encryption for the backup bucket.
+Enable AWS CloudTrail for auditing API-level activity across the account.
