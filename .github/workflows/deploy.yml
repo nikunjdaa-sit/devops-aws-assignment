@@ -1,0 +1,2 @@
+devops-aws-assignment/ ├── index.html # your web app ├── README.md # auto-created └── 
+.github/ └── workflows/ └── deploy.yml # CI/CD pipeline (fill in Step 5)
