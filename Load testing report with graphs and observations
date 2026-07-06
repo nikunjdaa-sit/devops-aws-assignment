@@ -51,4 +51,4 @@ distributed and capacity scales with demand.
 Move to a larger instance type or enable unlimited CPU credit mode if sustained high load is expected.
 Add a CDN (e.g. CloudFront) in front of static content to reduce direct load on EC2.
 
-|SCREENSHOT|
+
