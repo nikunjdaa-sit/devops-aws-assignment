@@ -10,25 +10,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Download your code
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # Step 2: Deploy to EC2 via SSH
       - name: Deploy to EC2
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # Pull latest code from GitHub
             cd /tmp
             rm -rf devops-aws-assignment
             git clone https://github.com/nikunjdaa-sit/devops-aws-assignment.git
-            # Copy new index.html to Nginx web folder
             sudo cp devops-aws-assignment/index.html /var/www/html/index.html
             sudo chown www-data:www-data /var/www/html/index.html
-            # Reload Nginx to serve new version
             sudo systemctl reload nginx
-            echo "✅ Deployment successful!"
+            echo "Deployment successful!"
